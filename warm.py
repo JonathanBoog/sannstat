@@ -27,11 +27,10 @@ plt.show()
 # Parametrar
 w = [-1.2, 0.9]
 sigma2 = 0.2
-np.random.seed(0)  # reproducibility
 
 # Skapa hela träningsdatasetet en gång
 X_training = np.linspace(-1.0, 1.0, 201)
-noise = np.random.normal(0, np.sqrt(sigma2), size=X_training.shape)
+noise = np.random.normal(0, sigma2, size=X_training.shape)
 T_training = w[0] + w[1] * X_training + noise
 
 # Kombinera till (x, t) par
@@ -53,8 +52,6 @@ likelihood_pdf = compute_log_likelihood(W0arr, W1arr, full_training_data, sigma2
 
 plt.contour(W0arr, W1arr, likelihood_pdf)
 plt.show()
-
-
 
 
 # == 3 == 
