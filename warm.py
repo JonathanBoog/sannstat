@@ -133,3 +133,6 @@ y_ml = w_ml[0] + w_ml[1] * x_plot
 plt.plot(x_plot, y_ml, 'orange', label='ML-prediktion', linewidth=2)
 plt.show()
 
+
+
+
