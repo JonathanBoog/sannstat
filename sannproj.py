@@ -88,28 +88,45 @@ plot_3d_surface(x1_flatTest, x2_flatTest, test_subset, sigma, "Testdata")
 # == 3 == Maximum Likelihood
 X = np.vstack((np.ones_like(x1_flatTr), x1_flatTr**2, x2_flatTr**3)).T #  φ(x) = Xest
 t = np.array(traning_subset)
-w_ml = np.linalg.inv(X.T @ X) @ X.T @ t
+w_ml = np.linalg.inv(X.T @ X) @ X.T @ t  # Ekvation nr 21
 
 # Generera test output utifrån nya w.
 phi = np.vstack((np.ones_like(x1_flatTest), x1_flatTest**2, x2_flatTest**3))
-t = w_ml.T @  phi # 
+t = w_ml.T @  phi # Vår gissade w och phi(x1,x2) ger oss gissning av t
 t_true = w.T @  phi # Test with no noice and correct w
 
 plot_3d_surface(x1_flatTest, x2_flatTest, t, sigma, "uppg3. ML-prediktion")
 
-
-MSE = sum((t-t_true)**2)/len(t)
+# Mean square error
+MSE = sum((t-t_true)**2)/len(t) # Ekvation nr ? , fanns i slides
 print("Mean square Error: " + str(MSE))
-
 
 
 # == 4 ==
 
 alpha = 0.3 # {0.3, 0.7, 2.0}
-beta = 1/(sigma**2)
+beta = 1/(sigma**2) 
 
-S_N_inv = alpha * np.eye(2) + beta * phi.T @ phi
+S_N_inv = alpha * np.identity(784) + beta * phi.T @ phi # Ekvation nr 28
 S_N = np.linalg.inv(S_N_inv)
 
-m_N = (beta * S_N @ phi.T @ t).T @ phi
-sigma_N = 1/beta + (phi.T @ S_N @ phi)
+x1test = 1
+x1test = 2
+
+xext = [1, ]
+def my_N(xext): 
+    return (beta * S_N @ phi.T @ t).T @ xext # ekv. 33, phi = Xext (stora x), xext = xext (lilla x, dvs endast en punkt)
+
+def sigma2_N(xext):
+    return 1/beta + (xext.T @ S_N @ xext) # ekv. 34
+
+# borde man möjligtvis kunna slå ihop alla xext, så att man inte behöver gå igenom en punkt åt gången
+# utan istället göra en stor matris med alla xext och sedan räkna ut sigma2_N för hela matrisen? <- auto genererat, hehe vet inte
+
+w_b = multivariate_normal(mean=my_N, cov=sigma2_N) 
+
+t_b = w_b.T @ phi
+plot_3d_surface(x1_flatTest, x2_flatTest, t_b, sigma, "uppg4. Bayesiansk prediktion")
+
+
+# mean of prediction/posterior
