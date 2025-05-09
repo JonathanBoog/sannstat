@@ -9,7 +9,6 @@ from scipy.stats import multivariate_normal
 
 # == 1 == Rita priorfördelningen
 
-
 w0list = np.linspace(-2.0, 2.0, 200)
 w1list = np . linspace (-2.0, 2.0, 200)
 W0arr, W1arr = np.meshgrid(w0list, w1list )
@@ -34,7 +33,7 @@ plt.ylabel('w1')
 ## 2 ##
 # Parametrar
 w = [-1.2, 0.9]
-sigma2 = 0.2
+sigma2 = 0.2 # variera mellan 0.1, 0.2, 0.4 and 0.8
 
 # Skapa hela träningsdatasetet en gång
 X_training = np.linspace(-1.0, 1.0, 201)
@@ -103,59 +102,53 @@ plt.xlabel('w0')
 plt.ylabel('w1')
 
 # == 4 == 
-# 1. Rita 5 samples från posterior
+
+# Skapa testdata 
+x_test = np.concatenate((np.linspace(-1.5, -1.1, 5), np.linspace(1.1, 1.5, 5)))
+t_test = w[0] + w[1] * x_test + np.random.normal(0, sigma2, size=x_test.shape)
+
+# Ta 5 samples från posterior
 ws_samples = np.random.multivariate_normal(m_N, S_N, 5)
 
-# 2. Skapa x-område för linjer
+# Skapa x-område för linjer
 x_plot = np.linspace(-2, 2, 200)
 
-
-
-
-
-# 3. Plotta linjerna
+# Plotta träningsdata och testdata
+x_train = np.array([x for x, t in full_training_data])
+t_train = np.array([t for x, t in full_training_data])
 plt.figure(figsize=(8,6))
+plt.scatter(x_train, t_train, color='black', marker='x', label='Training data')
+plt.scatter(x_test, t_test, color='red',marker="x",label="Test data")
+
+# Plotta linjerna
 for w in ws_samples:
     y_plot = w[0] + w[1] * x_plot
     plt.plot(x_plot, y_plot, label=f"w0={w[0]:.2f}, w1={w[1]:.2f}")
-
-# 4. Plotta träningsdata 
-x_train = np.array([x for x, t in full_training_data])
-t_train = np.array([t for x, t in full_training_data])
-plt.scatter(x_train, t_train, color='black', marker='x', label='Training data')
-def predict_posterior(x_star_list, m_N, S_N, beta):
-    x_star_list = np.array(x_star_list)
-    X_star = np.vstack((np.ones_like(x_star_list), x_star_list)).T  # [1, x*]
     
-    mean_preds = X_star @ m_N
-    var_preds = 1 / beta + np.sum(X_star @ S_N * X_star, axis=1)
-    std_preds = np.sqrt(var_preds)
-    
-    return mean_preds, std_preds
+plt.legend()
+plt.title("Samples från posteriorn")
 
-# === DINA EGETA TESTPUNKTER HÄR ===
-x_custom = [-2,-1.2, 0.0, 1.3, 2]  # ← Ändra fritt
+# == 5 ==
 
-# === BERÄKNA PREDIKTIV FÖRDELNING ===
-mu_custom, std_custom = predict_posterior(x_custom, m_N, S_N, beta)
+Phi_test = np.vstack((np.ones_like(x_test), x_test)).T
 
-# === PLOT ===
-plt.errorbar(x_custom, mu_custom, yerr=std_custom, fmt='o', color='red', capsize=5, label='Prediktion med osäkerhet')
-plt.axhline(0, color='gray', linestyle='--', linewidth=0.5)
+mean_pred = Phi_test @ m_N
+var_pred = 1 / beta + np.sum(Phi_test @ S_N * Phi_test, axis=1)
+std_pred = np.sqrt(var_pred)
 
-plt.show()
+plt.figure(figsize=(8,6))
+plt.errorbar(x_test, mean_pred, yerr=std_pred, fmt='o', label="Bayesiansk prediktion")
+plt.scatter(x_train, t_train, color='black', marker="x", label="Träningsdata")
 
 # == 6 ==
 # Maximum Likelihood-estimat
-X = np.vstack((np.ones_like(X_training), T_training)).T
+X = np.vstack((np.ones_like(X_training), X_training)).T
 t = np.array(T_training)
 w_ml = np.linalg.inv(X.T @ X) @ X.T @ t
 
 # Rita ML-linje (orange)
 y_ml = w_ml[0] + w_ml[1] * x_plot
-plt.plot(x_plot, y_ml, 'orange', label='ML-prediktion', linewidth=2)
+plt.plot(x_plot, y_ml, 'orange', linewidth=2, label="Maximum Likelihood estimat") 
+plt.legend()
+plt.title("Bayesiansk prediktiv fördelning")
 plt.show()
-
-
-
-
