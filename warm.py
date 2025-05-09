@@ -1,5 +1,6 @@
 import numpy as np
 import math
+import random
 import matplotlib
 matplotlib.use('TkAgg')  # eller 'Qt5Agg' om du har Qt installerat
 import matplotlib.pyplot as plt
@@ -23,6 +24,7 @@ rv = multivariate_normal(mu,Cov)
 Wpriorpdf = rv.pdf(pos)
 
 
+plt.figure(figsize=(8, 6))
 plt.contour(W0arr, W1arr, Wpriorpdf)
 plt.title('Prior')
 plt.xlabel('w0')
@@ -43,10 +45,10 @@ T_training = w[0] + w[1] * X_training + noise
 full_training_data = [[float(xi), float(ti)] for xi, ti in zip(X_training, T_training)]
 
 # Exempel:
-subset1 = np.random.sample(full_training_data, size=3)
-subset2 = np.random.sample(full_training_data, size=10)
-subset3 = np.random.sample(full_training_data, size=20)
-subset4 = np.random.sample(full_training_data, size=100)
+subset1 = random.sample(full_training_data, 3)
+subset2 = random.sample(full_training_data, 10)
+subset3 = random.sample(full_training_data, 20)
+subset4 = random.sample(full_training_data, 100)
 
 def compute_log_likelihood(w0_grid, w1_grid, training_data, sigma2):
     log_likelihood = np.zeros(w0_grid.shape)
@@ -55,14 +57,16 @@ def compute_log_likelihood(w0_grid, w1_grid, training_data, sigma2):
         log_likelihood += -0.5 * np.log(2 * np.pi * sigma2) - ((ti - pred)**2) / (2 * sigma2)
     return np.exp(log_likelihood)  # för att få tillbaka sannolikhetsfördelningen
 
-likelihood = []
-likelihood[0] = compute_log_likelihood(W0arr, W1arr, subset1, sigma2)
-likelihood[1] = compute_log_likelihood(W0arr, W1arr, subset2, sigma2)
-likelihood[2] = compute_log_likelihood(W0arr, W1arr, subset3, sigma2)
-likelihood[3] = compute_log_likelihood(W0arr, W1arr, subset4, sigma2)
+likelihood = [
+compute_log_likelihood(W0arr, W1arr, subset1, sigma2),
+compute_log_likelihood(W0arr, W1arr, subset2, sigma2),
+compute_log_likelihood(W0arr, W1arr, subset3, sigma2),
+compute_log_likelihood(W0arr, W1arr, subset4, sigma2)]
 
+
+plt.figure(figsize=(8, 6))
 for i in range(len(likelihood)):
-    plt.subplot(2, 2, i)
+    plt.subplot(2, 2, i+1)
     plt.contour(W0arr, W1arr, likelihood[i])
     plt.title('Subset ' + str(i+1))
     plt.xlabel('w0')
@@ -71,6 +75,7 @@ for i in range(len(likelihood)):
 
 # == 3 == 
 
+# Posterior enligt Eqs. 27 & 28
 def compute_posterior(Phi, t, alpha, beta):
     S_N_inv = alpha * np.eye(2) + beta * Phi.T @ Phi
     S_N = np.linalg.inv(S_N_inv)
@@ -91,8 +96,11 @@ m_N, S_N = compute_posterior(Phi, t_train, alpha, beta)
 posterior = multivariate_normal(mean=m_N, cov=S_N)
 posterior_pdf = posterior.pdf(pos)
 
+plt.figure(figsize=(8, 6))
 plt.contour(W0arr, W1arr, posterior_pdf)
-plt.show()
+plt.title('Posterior')
+plt.xlabel('w0')    
+plt.ylabel('w1')
 
 # == 4 == 
 # 1. Rita 5 samples från posterior
