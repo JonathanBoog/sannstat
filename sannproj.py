@@ -36,7 +36,7 @@ def plot_3d_surface(x1, x2, t, sigma, text):
     ax.set_zlabel('t')
     ax.set_title(f'{text} genererad från modellen med σ = {sigma}')
     plt.tight_layout()
-    plt.show()
+    
 
 
 # == Pre-values =======================
@@ -99,34 +99,51 @@ plot_3d_surface(x1_flatTest, x2_flatTest, t, sigma, "uppg3. ML-prediktion")
 
 # Mean square error
 MSE = sum((t-t_true)**2)/len(t) # Ekvation nr ? , fanns i slides
-print("Mean square Error: " + str(MSE))
+print("Mean square Error (ML): " + str(MSE))
 
 
-# == 4 ==
+# == 4 == Bayesiansk linjär regression
 
-alpha = 0.3 # {0.3, 0.7, 2.0}
-beta = 1/(sigma**2) 
+alpha = 0.3  # Du kan variera mellan {0.3, 0.7, 2.0}
+alphaVals = [0.3, 0.7, 2.0]
+beta = 1 / sigma**2
 
-S_N_inv = alpha * np.identity(784) + beta * phi.T @ phi # Ekvation nr 28
+# Träningsdesignmatris (Phi)
+Xext = np.vstack((np.ones_like(x1_flatTr), x1_flatTr**2, x2_flatTr**3)).T  # N x D
+t_train = np.array(traning_subset)
+
+# Testdesignmatris (Phi_*)
+Phi_test = np.vstack((np.ones_like(x1_flatTest), x1_flatTest**2, x2_flatTest**3)).T  # M x D
+
+# Posterior: S_N och m_N
+S_N_inv = alpha * np.eye(Xext.shape[1]) + beta * Xext.T @ Xext  # D x D
 S_N = np.linalg.inv(S_N_inv)
+m_N = beta * S_N @ Xext.T @ t_train  # D x 1
 
-x1test = 1
-x1test = 2
+# === Prediktivt medelvärde och varians ===
 
-xext = [1, ]
-def my_N(xext): 
-    return (beta * S_N @ phi.T @ t).T @ xext # ekv. 33, phi = Xext (stora x), xext = xext (lilla x, dvs endast en punkt)
+# Prediktivt medelvärde för alla testpunkter
+mu_N = Phi_test @ m_N  # M x 1
 
-def sigma2_N(xext):
-    return 1/beta + (xext.T @ S_N @ xext) # ekv. 34
+# Prediktiv varians för alla testpunkter (vektoriserat)
+sigma2_N = 1 / beta + np.sum(Phi_test @ S_N * Phi_test, axis=1)  # M x 1
 
-# borde man möjligtvis kunna slå ihop alla xext, så att man inte behöver gå igenom en punkt åt gången
-# utan istället göra en stor matris med alla xext och sedan räkna ut sigma2_N för hela matrisen? <- auto genererat, hehe vet inte
+# === Plot ===
+plot_3d_surface(x1_flatTest, x2_flatTest, mu_N, sigma, f"4. Bayesianskt prediktivt medelvärde med alpha = {alpha} och")
 
-w_b = multivariate_normal(mean=my_N, cov=sigma2_N) 
-
-t_b = w_b.T @ phi
-plot_3d_surface(x1_flatTest, x2_flatTest, t_b, sigma, "uppg4. Bayesiansk prediktion")
+# Plotta osäkerheten som separat yta
+plot_3d_surface(x1_flatTest, x2_flatTest, sigma2_N, sigma, f"4. Bayesiansk prediktiv varians alpha = {alpha} och")
 
 
-# mean of prediction/posterior
+
+
+# == 5. Jämför Maximum Likelihood med Bayesiansk linjär regression
+
+# MSE för ML printas i uppgift 3
+MSEBay = sum((mu_N-t_true)**2)/len(t)
+print("Mean square Error (Bayesian): " + str(MSEBay))
+
+
+
+# == Visa alla figurer tsm ==
+plt.show()
