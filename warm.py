@@ -6,8 +6,8 @@ import matplotlib.pyplot as plt
 from scipy.stats import multivariate_normal
 #from scipy.spatial.distance import cdist
 
-# == 1 ==
-# Rita priorfördelningen
+# == 1 == Rita priorfördelningen
+
 
 w0list = np.linspace(-2.0, 2.0, 200)
 w1list = np . linspace (-2.0, 2.0, 200)
@@ -43,9 +43,10 @@ T_training = w[0] + w[1] * X_training + noise
 full_training_data = [[float(xi), float(ti)] for xi, ti in zip(X_training, T_training)]
 
 # Exempel:
-subset1 = full_training_data[:10]
-subset2 = full_training_data[:20]
-subset3 = full_training_data[:100]
+subset1 = np.random.sample(full_training_data, size=3)
+subset2 = np.random.sample(full_training_data, size=10)
+subset3 = np.random.sample(full_training_data, size=20)
+subset4 = np.random.sample(full_training_data, size=100)
 
 def compute_log_likelihood(w0_grid, w1_grid, training_data, sigma2):
     log_likelihood = np.zeros(w0_grid.shape)
@@ -54,10 +55,18 @@ def compute_log_likelihood(w0_grid, w1_grid, training_data, sigma2):
         log_likelihood += -0.5 * np.log(2 * np.pi * sigma2) - ((ti - pred)**2) / (2 * sigma2)
     return np.exp(log_likelihood)  # för att få tillbaka sannolikhetsfördelningen
 
-likelihood_pdf = compute_log_likelihood(W0arr, W1arr, full_training_data, sigma2)
+likelihood = []
+likelihood[0] = compute_log_likelihood(W0arr, W1arr, subset1, sigma2)
+likelihood[1] = compute_log_likelihood(W0arr, W1arr, subset2, sigma2)
+likelihood[2] = compute_log_likelihood(W0arr, W1arr, subset3, sigma2)
+likelihood[3] = compute_log_likelihood(W0arr, W1arr, subset4, sigma2)
 
-plt.contour(W0arr, W1arr, likelihood_pdf)
-plt.show()
+for i in range(len(likelihood)):
+    plt.subplot(2, 2, i)
+    plt.contour(W0arr, W1arr, likelihood[i])
+    plt.title('Subset ' + str(i+1))
+    plt.xlabel('w0')
+    plt.ylabel('w1')
 
 
 # == 3 == 

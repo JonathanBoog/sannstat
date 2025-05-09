@@ -139,24 +139,74 @@ print("Mean square Error (Bayesian): " + str(MSEBay))
 
 # == 6. Jämför träningsdata och genererad data för samma område
 
-Xext = np.vstack((np.ones_like(x1_flatTr), x1_flatTr**2, x2_flatTr**3)).T  # N x D
-t_train = np.array(traning_subset)
 
-# Posterior: S_N och m_N
-S_N_inv = alpha * np.eye(Xext.shape[1]) + beta * Xext.T @ Xext  # D x D
-S_N = np.linalg.inv(S_N_inv)
-m_N = beta * S_N @ Xext.T @ t_train  # D x 1
+alpha_values = [0.3, 0.7, 2.0]
+sigma_values = [0.3, 0.5, 0.8, 1.2]
 
-# Prediktivt medelvärde för alla testpunkter
-mu_Ntraning = Xext @ m_N  # M x 1
+# För att spara resultat
+mse_train_mat = np.zeros((len(alpha_values), len(sigma_values)))
+mse_test_mat = np.zeros((len(alpha_values), len(sigma_values)))
+var_train_mat = np.zeros((len(alpha_values), len(sigma_values)))
+var_test_mat = np.zeros((len(alpha_values), len(sigma_values)))
 
-# Prediktiv varians för alla testpunkter (vektoriserat)
-sigma2_Ntraning = 1 / beta + np.sum(Xext @ S_N * Xext, axis=1)  # M x 1
 
-print("Varians för träningsdata: " + str(sigma2_Ntraning))
-print("Varians för testdata: " + str(sigma2_N))
-print("Medelvarians (träning):", np.mean(sigma2_Ntraning))
-print("Medelvarians (test):", np.mean(sigma2_N))
+print("\n== Resultat för olika α och σ² ==\n")
+for i, alpha in enumerate(alpha_values):
+    for j, sigma in enumerate(sigma_values):
+        beta = 1 / sigma**2
 
+        # -- Träna om modellen med nya alpha och sigma
+        Xext = np.vstack((np.ones_like(x1_flatTr), x1_flatTr**2, x2_flatTr**3)).T
+        Phi_test = np.vstack((np.ones_like(x1_flatTest), x1_flatTest**2, x2_flatTest**3)).T
+
+        S_N_inv = alpha * np.eye(Xext.shape[1]) + beta * Xext.T @ Xext
+        S_N = np.linalg.inv(S_N_inv)
+        m_N = beta * S_N @ Xext.T @ traning_subset
+
+        # -- Prediktioner och varians
+        mu_train = Xext @ m_N
+        sigma2_train = 1 / beta + np.sum(Xext @ S_N * Xext, axis=1)
+
+        mu_test = Phi_test @ m_N
+        sigma2_test = 1 / beta + np.sum(Phi_test @ S_N * Phi_test, axis=1)
+
+        # -- MSE för både träning och test
+        t_true_train = w.T @ np.vstack((np.ones_like(x1_flatTr), x1_flatTr**2, x2_flatTr**3))
+        t_true_test = w.T @ np.vstack((np.ones_like(x1_flatTest), x1_flatTest**2, x2_flatTest**3))
+
+        mse_train = np.mean((mu_train - t_true_train)**2)
+        mse_test = np.mean((mu_test - t_true_test)**2)
+
+        print(f"α = {alpha:.1f}, σ² = {sigma**2:.2f}")
+        print(f"  MSE (train): {mse_train:.4f}")
+        print(f"  MSE (test):  {mse_test:.4f}")
+        print(f"  Mean Var (train): {np.mean(sigma2_train):.4f}")
+        print(f"  Mean Var (test):  {np.mean(sigma2_test):.4f}")
+        print("-" * 40)
+        
+        mse_train_mat[i, j] = mse_train
+        mse_test_mat[i, j] = mse_test
+        var_train_mat[i, j] = np.mean(sigma2_train)
+        var_test_mat[i, j] = np.mean(sigma2_test)
+
+# === Plotfunktion ===
+def plot_matrix(data, title, ylabel, cmap='viridis'):
+    fig, ax = plt.subplots()
+    cax = ax.imshow(data, cmap=cmap)
+    fig.colorbar(cax)
+    ax.set_xticks(range(len(sigma_values)))
+    ax.set_yticks(range(len(alpha_values)))
+    ax.set_xticklabels([f"{s**2:.2f}" for s in sigma_values])
+    ax.set_yticklabels([f"{a:.1f}" for a in alpha_values])
+    ax.set_xlabel(r"$\sigma^2$")
+    ax.set_ylabel(r"$\alpha$")
+    ax.set_title(title)
+    plt.tight_layout()
+
+# === Rita upp alla fyra figurer ===
+plot_matrix(mse_train_mat, "MSE (Train)", "Alpha")
+plot_matrix(mse_test_mat, "MSE (Test)", "Alpha")
+plot_matrix(var_train_mat, "Mean Variance (Train)", "Alpha")
+plot_matrix(var_test_mat, "Mean Variance (Test)", "Alpha")
 # == Visa alla figurer tsm ==
 plt.show()
