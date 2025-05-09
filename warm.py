@@ -6,6 +6,9 @@ import matplotlib.pyplot as plt
 from scipy.stats import multivariate_normal
 #from scipy.spatial.distance import cdist
 
+# == 1 ==
+# Rita priorfördelningen
+
 w0list = np.linspace(-2.0, 2.0, 200)
 w1list = np . linspace (-2.0, 2.0, 200)
 W0arr, W1arr = np.meshgrid(w0list, w1list )
@@ -21,7 +24,10 @@ Wpriorpdf = rv.pdf(pos)
 
 
 plt.contour(W0arr, W1arr, Wpriorpdf)
-plt.show()
+plt.title('Prior')
+plt.xlabel('w0')
+plt.ylabel('w1')
+
 
 ## 2 ##
 # Parametrar

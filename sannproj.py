@@ -128,13 +128,6 @@ mu_N = Phi_test @ m_N  # M x 1
 # Prediktiv varians för alla testpunkter (vektoriserat)
 sigma2_N = 1 / beta + np.sum(Phi_test @ S_N * Phi_test, axis=1)  # M x 1
 
-# === Plot ===
-plot_3d_surface(x1_flatTest, x2_flatTest, mu_N, sigma, f"4. Bayesianskt prediktivt medelvärde med alpha = {alpha} och")
-
-# Plotta osäkerheten som separat yta
-plot_3d_surface(x1_flatTest, x2_flatTest, sigma2_N, sigma, f"4. Bayesiansk prediktiv varians alpha = {alpha} och")
-
-
 
 
 # == 5. Jämför Maximum Likelihood med Bayesiansk linjär regression
@@ -144,6 +137,26 @@ MSEBay = sum((mu_N-t_true)**2)/len(t)
 print("Mean square Error (Bayesian): " + str(MSEBay))
 
 
+# == 6. Jämför träningsdata och genererad data för samma område
+
+Xext = np.vstack((np.ones_like(x1_flatTr), x1_flatTr**2, x2_flatTr**3)).T  # N x D
+t_train = np.array(traning_subset)
+
+# Posterior: S_N och m_N
+S_N_inv = alpha * np.eye(Xext.shape[1]) + beta * Xext.T @ Xext  # D x D
+S_N = np.linalg.inv(S_N_inv)
+m_N = beta * S_N @ Xext.T @ t_train  # D x 1
+
+# Prediktivt medelvärde för alla testpunkter
+mu_Ntraning = Xext @ m_N  # M x 1
+
+# Prediktiv varians för alla testpunkter (vektoriserat)
+sigma2_Ntraning = 1 / beta + np.sum(Xext @ S_N * Xext, axis=1)  # M x 1
+
+print("Varians för träningsdata: " + str(sigma2_Ntraning))
+print("Varians för testdata: " + str(sigma2_N))
+print("Medelvarians (träning):", np.mean(sigma2_Ntraning))
+print("Medelvarians (test):", np.mean(sigma2_N))
 
 # == Visa alla figurer tsm ==
 plt.show()
