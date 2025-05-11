@@ -41,7 +41,7 @@ def plot_3d_surface(x1, x2, t, sigma, text):
 
 # == Pre-values =======================
 w = np.array([0, 2.5, -0.5])
-sigma = 0.3 # eller 0.5 0.8 1.2
+sigma = 0.3 # Testa olika 0.3 0.5 0.8 1.2
 # ======================================
 
 
@@ -105,7 +105,6 @@ print("Mean square Error (ML): " + str(MSE))
 # == 4 == Bayesiansk linjär regression
 
 alpha = 0.3  # Du kan variera mellan {0.3, 0.7, 2.0}
-alphaVals = [0.3, 0.7, 2.0]
 beta = 1 / sigma**2
 
 # Träningsdesignmatris (Phi)

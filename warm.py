@@ -11,7 +11,7 @@ from scipy.stats import multivariate_normal
 
 w0list = np.linspace(-2.0, 2.0, 200)
 w1list = np . linspace (-2.0, 2.0, 200)
-W0arr, W1arr = np.meshgrid(w0list, w1list )
+W0arr, W1arr = np.meshgrid(w0list, w1list)
 pos = np.dstack((W0arr, W1arr))
 
 mu = np.array([0.0, 0.0])
@@ -132,8 +132,8 @@ plt.title("Samples från posteriorn")
 
 Phi_test = np.vstack((np.ones_like(x_test), x_test)).T
 
-mean_pred = Phi_test @ m_N
-var_pred = 1 / beta + np.sum(Phi_test @ S_N * Phi_test, axis=1)
+mean_pred = Phi_test @ m_N # formel 33
+var_pred = 1 / beta + np.sum(Phi_test @ S_N * Phi_test, axis=1) # formel 34
 std_pred = np.sqrt(var_pred)
 
 plt.figure(figsize=(8,6))
@@ -144,7 +144,7 @@ plt.scatter(x_train, t_train, color='black', marker="x", label="Träningsdata")
 # Maximum Likelihood-estimat
 X = np.vstack((np.ones_like(X_training), X_training)).T
 t = np.array(T_training)
-w_ml = np.linalg.inv(X.T @ X) @ X.T @ t
+w_ml = np.linalg.inv(X.T @ X) @ X.T @ t # Ekvation nr 21
 
 # Rita ML-linje (orange)
 y_ml = w_ml[0] + w_ml[1] * x_plot
