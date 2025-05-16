@@ -14,18 +14,18 @@ w1list = np . linspace (-2.0, 2.0, 200)
 W0arr, W1arr = np.meshgrid(w0list, w1list)
 pos = np.dstack((W0arr, W1arr))
 
-mu = np.array([0.0, 0.0])
-alpha = 2.0
-Cov = (1.0 / alpha) * np.identity(2)
 
 # set your mu vector and Cov array
+mu = np.array([0.0, 0.0])
+alpha = 0.5 # variera mellan 0.5, 2 och 4
+Cov = (1.0 / alpha) * np.identity(2)
+
 rv = multivariate_normal(mu,Cov)
 Wpriorpdf = rv.pdf(pos)
 
-
 plt.figure(figsize=(8, 6))
 plt.contour(W0arr, W1arr, Wpriorpdf)
-plt.title('Prior')
+plt.title('Priorfördelning med α = 0.5' )
 plt.xlabel('w0')
 plt.ylabel('w1')
 
@@ -87,7 +87,7 @@ t_train = np.array([t for x, t in full_training_data])
 
 Phi = np.vstack([np.ones_like(x_train), x_train]).T
 
-alpha = 2.0
+
 beta = 1.0 / sigma2  # 1 / 0.2
 
 m_N, S_N = compute_posterior(Phi, t_train, alpha, beta)
@@ -127,6 +127,8 @@ for w in ws_samples:
     
 plt.legend()
 plt.title("Samples från posteriorn")
+plt.xlabel("x")
+plt.ylabel("t")
 
 # == 5 ==
 
@@ -151,4 +153,6 @@ y_ml = w_ml[0] + w_ml[1] * x_plot
 plt.plot(x_plot, y_ml, 'orange', linewidth=2, label="Maximum Likelihood estimat") 
 plt.legend()
 plt.title("Bayesiansk prediktiv fördelning")
+plt.xlabel("x")
+plt.ylabel("t")
 plt.show()

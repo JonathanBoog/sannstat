@@ -104,28 +104,53 @@ print("Mean square Error (ML): " + str(MSE))
 
 # == 4 == Bayesiansk linjär regression
 
-alpha = 0.3  # Du kan variera mellan {0.3, 0.7, 2.0}
-beta = 1 / sigma**2
-
-# Träningsdesignmatris (Phi)
-Xext = np.vstack((np.ones_like(x1_flatTr), x1_flatTr**2, x2_flatTr**3)).T  # N x D
 t_train = np.array(traning_subset)
+beta = 1 / sigma**2
+alphas = [0.3, 0.7, 2.0]
 
-# Testdesignmatris (Phi_*)
-Phi_test = np.vstack((np.ones_like(x1_flatTest), x1_flatTest**2, x2_flatTest**3)).T  # M x D
+fig = plt.figure(figsize=(10, 9))
 
-# Posterior: S_N och m_N
-S_N_inv = alpha * np.eye(Xext.shape[1]) + beta * Xext.T @ Xext  # D x D
-S_N = np.linalg.inv(S_N_inv)
-m_N = beta * S_N @ Xext.T @ t_train  # D x 1
+for i, alpha in enumerate(alphas):
+    # Designmatris för träning (Phi)
+    Xext = np.vstack((np.ones_like(x1_flatTr), x1_flatTr**2, x2_flatTr**3)).T  # N x D
 
-# === Prediktivt medelvärde och varians ===
+    # Designmatris för testdata (Phi_*)
+    Phi_test = np.vstack((np.ones_like(x1_flatTest), x1_flatTest**2, x2_flatTest**3)).T  # M x D
 
-# Prediktivt medelvärde för alla testpunkter
-mu_N = Phi_test @ m_N  # M x 1
+    # Posterior: S_N och m_N
+    S_N_inv = alpha * np.eye(Xext.shape[1]) + beta * Xext.T @ Xext
+    S_N = np.linalg.inv(S_N_inv)
+    m_N = beta * S_N @ Xext.T @ t_train
 
-# Prediktiv varians för alla testpunkter (vektoriserat)
-sigma2_N = 1 / beta + np.sum(Phi_test @ S_N * Phi_test, axis=1)  # M x 1
+    # Prediktivt medelvärde och osäkerhet
+    mu_N = Phi_test @ m_N
+    sigma2_N = 1 / beta + np.sum(Phi_test @ S_N * Phi_test, axis=1)
+    std_N = np.sqrt(sigma2_N)
+
+    mu_N_grid = mu_N.reshape(X1.shape)
+    std_N_grid = std_N.reshape(X1.shape)
+
+    # === 3D-plot: prediktivt medelvärde ===
+    ax1 = fig.add_subplot(3, 2, 2 * i + 1, projection='3d')
+    ax1.plot_surface(X1, X2, mu_N_grid, cmap='viridis', alpha=0.9)
+    ax1.set_title(f'α = {alpha} — Prediktivt medelvärde')
+    ax1.set_xlabel('x1')
+    ax1.set_ylabel('x2')
+    ax1.set_zlabel('t')
+
+    # === 2D-plot: osäkerhet ===
+    ax2 = fig.add_subplot(3, 2, 2 * i + 2)
+    contour = ax2.contourf(X1, X2, std_N_grid, cmap='plasma')
+    ax2.set_title(f'α = {alpha} — Prediktiv osäkerhet (std)')
+    ax2.set_xlabel('x1')
+    ax2.set_ylabel('x2')
+    ax2.set_aspect('equal')
+
+# Lägg till färgbar för osäkerhet
+cbar_ax = fig.add_axes([0.92, 0.15, 0.015, 0.7])
+fig.colorbar(contour, cax=cbar_ax, label='Standardavvikelse')
+
+plt.tight_layout(rect=[0, 0, 0.9, 1])
 
 
 
@@ -150,8 +175,8 @@ var_test_mat = np.zeros((len(alpha_values), len(sigma_values)))
 
 
 print("\n== Resultat för olika α och σ² ==\n")
-for i, alpha in enumerate(alpha_values):
-    for j, sigma in enumerate(sigma_values):
+for alpha in alpha_values:
+    for sigma in sigma_values:
         beta = 1 / sigma**2
 
         # -- Träna om modellen med nya alpha och sigma
@@ -182,11 +207,12 @@ for i, alpha in enumerate(alpha_values):
         print(f"  Mean Var (train): {np.mean(sigma2_train):.4f}")
         print(f"  Mean Var (test):  {np.mean(sigma2_test):.4f}")
         print("-" * 40)
-        
+        '''
         mse_train_mat[i, j] = mse_train
         mse_test_mat[i, j] = mse_test
         var_train_mat[i, j] = np.mean(sigma2_train)
         var_test_mat[i, j] = np.mean(sigma2_test)
+        '''
 
 # === Plotfunktion ===
 def plot_matrix(data, title, ylabel, cmap='viridis'):
@@ -201,11 +227,12 @@ def plot_matrix(data, title, ylabel, cmap='viridis'):
     ax.set_ylabel(r"$\alpha$")
     ax.set_title(title)
     plt.tight_layout()
-
+'''
 # === Rita upp alla fyra figurer ===
 plot_matrix(mse_train_mat, "MSE (Train)", "Alpha")
 plot_matrix(mse_test_mat, "MSE (Test)", "Alpha")
 plot_matrix(var_train_mat, "Mean Variance (Train)", "Alpha")
 plot_matrix(var_test_mat, "Mean Variance (Test)", "Alpha")
+'''
 # == Visa alla figurer tsm ==
 plt.show()
